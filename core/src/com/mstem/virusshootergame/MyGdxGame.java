@@ -92,14 +92,13 @@ public class MyGdxGame extends Game {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         //drawing objects to the screen
-//        batch.setProjectionMatrix(camera.combined);
+        batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		batch.draw(background, 0, 0);
         gunAnimated.draw(batch);
         for(Target good: goodTargets){
             good.draw(batch);
         }
-//        target.draw(batch);
         for(Target bad: badTargets) {
             bad.draw(batch);
         }

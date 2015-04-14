@@ -25,6 +25,7 @@ public class GameScreen extends DefaultScreen implements InputProcessor {
 //        worldController = new WorldController();
 //        worldRenderer = new WorldRenderer(worldController);
         virusGame = new MyGdxGame();
+        virusGame.create();
 
         // Game world is active on start
         paused = false;

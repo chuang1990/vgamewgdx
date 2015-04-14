@@ -9,6 +9,8 @@ import com.mstem.virusshootergame.Screen.GameScreen;
 //import com.mygdx.game.screens.TestScreen;
 
 public class MainClass extends Game {
+
+
     @Override
     public void create() {
 

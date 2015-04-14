@@ -20,7 +20,7 @@ public class Target {
     private static final float SPEED = 350;
 //    private static List<AnimatedSprite> targets = new ArrayList<AnimatedSprite>();
     public Texture texture;
-    public AnimatedSprite targetAnimated;
+    public TargetAnimated targetAnimated;
     public float respawnTime = 0f;
 
 
@@ -45,7 +45,7 @@ public class Target {
      */
     public void randomGen() {
         Sprite targetSprite = new Sprite(texture);
-        targetAnimated = new AnimatedSprite(targetSprite);
+        targetAnimated = new TargetAnimated(targetSprite);
 
         int randomX = createRandomXPosition();
         int randomY = createRandomYPosition();
@@ -116,7 +116,7 @@ public class Target {
     }
 
     /**
-     * What happends when the target is hit by a bullet
+     * What happens when the target is hit by a bullet
      */
     public void hit() {
         targetAnimated.setDestroy(true);
@@ -126,7 +126,7 @@ public class Target {
     /**
      * get the targetAnimated
      */
-    public AnimatedSprite getTargetAnimated() {
+    public TargetAnimated getTargetAnimated() {
         return targetAnimated;
     }
 }
