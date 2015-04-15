@@ -24,6 +24,8 @@ public class Target {
     public TargetAnimated targetAnimated;
     private float respawnTime = 0f;
 
+    //storing values
+    private String name;
     private int score;
 
 
@@ -37,10 +39,11 @@ public class Target {
      * Constructor
      * @param texture
      */
-    public Target(Texture texture, float speed, int score) {
+    public Target(Texture texture, float speed, int score, String name) {
         this.texture = texture;
         this.SPEED = speed;
         this.score = score;
+        this.name = name;
         randomGen();
     }
 
@@ -73,7 +76,7 @@ public class Target {
      */
     private int createRandomYPosition() {
         Random random = new Random();
-        int randomNum = random.nextInt((MyGdxGame.VIEWPORT_HEIGHT - targetAnimated.getHeight())) + targetAnimated.getHeight();
+        int randomNum = random.nextInt((MyGdxGame.VIEWPORT_HEIGHT - 200)) + 100;
         return randomNum + targetAnimated.getHeight()/2;
     }
 
@@ -125,7 +128,7 @@ public class Target {
      */
     public void hit() {
         targetAnimated.setDestroy(true);
-        respawnTime = .5f;
+        respawnTime = .1f;
 //        respawnTime = 5f;
     }
 
@@ -134,6 +137,13 @@ public class Target {
      */
     public TargetAnimated getTargetAnimated() {
         return targetAnimated;
+    }
+
+    /**
+     * get the name of the target
+     */
+    public String getName() {
+        return this.name;
     }
 
 

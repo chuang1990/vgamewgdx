@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.mstem.virusshootergame.EndGameScreen;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,14 +21,15 @@ import java.util.Random;
  */
 public class MyGdxGame extends Game {
     //utilities
+    public static final String TAG = MyGdxGame.class.getName();
     public static final int VIEWPORT_WIDTH = 1000;
     public static final int VIEWPORT_HEIGHT = 558;
     SpriteBatch batch;
     private OrthographicCamera camera;
 
     //variables for checking game conditions
-    private float timeRemain = 80f;
-    public int winScore = 200;
+    private float timeRemain = 60f;
+    public int winScore = 300;
     public int playerScore = 0;
     private BitmapFont font;
 
@@ -45,6 +47,7 @@ public class MyGdxGame extends Game {
     private ArrayList<Target> badTargets = new ArrayList<Target>();
     private ArrayList<Target> virusTargets = new ArrayList<Target>();
     private Random random = new Random();
+    private int timeStart = 80;
 
     public MyGdxGame() {
         this.create();
@@ -64,7 +67,7 @@ public class MyGdxGame extends Game {
 		batch = new SpriteBatch();
 
         //background texture
-		background = new Texture(Gdx.files.internal("android/assets/background_mosaic.jpg"));
+		background = new Texture(Gdx.files.internal("android/assets/background/background_mosaic.jpg"));
 
         //font
         font = new BitmapFont();
@@ -110,38 +113,10 @@ public class MyGdxGame extends Game {
 		batch.begin();
         batch.draw(background, 0, 0);
 
-        //check if game is over
-        if(!isGameOver()) {
-            //can't seem to move to a method
-            gunAnimated.draw(batch);
-            if(timeRemain >40f){
-            for (Target good : goodTargets) {
-                good.draw(batch);
-            }}
-            for (Target bad : badTargets) {
-                bad.draw(batch);
-            }
-            if (timeRemain <= 80f) {
-                for (Target virus : virusTargets) {
-                    virus.draw(batch);
-                }
-            }
-            shotManager.draw(batch);
-
-            //check user input
-            handleInput();
-            //actions in response to inputs
-            update();
-
-            //check if the game is finished
-            isGameOver();
-
-        }
+        drawObjects();
 
         //font
-        font.draw(batch, "Score: " + Integer.toString(playerScore), 10,20);
-        font.draw(batch, "Bullets Remain: " + shotManager.shotRemain, VIEWPORT_WIDTH-130, 20);
-        font.draw(batch, "Time Remain: " + Integer.toString((int)timeRemain) + "seconds", 120, 20);
+
         batch.end();
 	}
 
@@ -172,14 +147,54 @@ public class MyGdxGame extends Game {
         countDown();
     }
 
+    private void drawObjects() {
+        //check if game is over
+        if(!isGameOver()) {
+            //can't seem to move to a method
+            gunAnimated.draw(batch);
+                for (Target good : goodTargets) {
+                    good.draw(batch);
+                }
+
+                for (Target bad : badTargets) {
+                    bad.draw(batch);
+                }
+            
+                for (Target virus : virusTargets) {
+                    virus.draw(batch);
+                }
+
+            shotManager.draw(batch);
+
+            //check user input
+            handleInput();
+            //actions in response to inputs
+            update();
+
+            //check if the game is finished
+            isGameOver();
+
+            font.draw(batch, "Score: " + Integer.toString(playerScore), 10,20);
+            font.draw(batch, "Bullets Remain: " + shotManager.shotRemain, VIEWPORT_WIDTH-130, 20);
+            font.draw(batch, "Time Remain: " + Integer.toString((int)timeRemain) + "seconds", 120, 20);
+
+        }
+        else {
+
+            font.draw(batch, "Total Score: " + playerScore, VIEWPORT_WIDTH/2 -100, VIEWPORT_HEIGHT/2+50);
+            font.draw(batch,"Time Used: " + getTimeUsed(), VIEWPORT_WIDTH/2-100, VIEWPORT_HEIGHT/2+30);
+            font.draw(batch, "Remaining Bullet: " + shotManager.shotRemain, VIEWPORT_WIDTH/2 -100, VIEWPORT_HEIGHT/2+10);
+            font.draw(batch,"Press R to Start a New Game Press Q: Return to Main Menu", VIEWPORT_WIDTH/2 -100, VIEWPORT_HEIGHT/2 -10);
+        }
+    }
+
     /**
      * check for user input and reacts
      */
     private void handleInput() {
-        //if left or a is pressed
+        //if z is pressed
         if (gunSprite.getX() > 0) {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT) ||
-                    Gdx.input.isKeyJustPressed(Input.Keys.A)) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)) {
                     gunAnimated.moveLeft(500);
                 }
@@ -188,10 +203,9 @@ public class MyGdxGame extends Game {
                 }
             }
         }
-        //if right or d is pressed
+        //if / is pressed
         if(gunSprite.getX() < background.getWidth() - gunSprite.getWidth()){
-            if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT) ||
-                    Gdx.input.isKeyJustPressed(Input.Keys.D)) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.SLASH)) {
                 if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)) {
                     gunAnimated.moveRight(500);
                 }
@@ -200,10 +214,8 @@ public class MyGdxGame extends Game {
                 }
             }
         }
-        //if up or space or w is pressed
-        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
-                Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
-                Gdx.input.isKeyJustPressed(Input.Keys.W)) {
+        //if space is pressed
+        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             shotManager.fire(gunAnimated.getX());
         }
     }
@@ -213,7 +225,7 @@ public class MyGdxGame extends Game {
      * @return
      */
     private boolean isGameOver() {
-        if(shotManager.shotRemain == 0 || timeRemain == 0f || playerScore >= winScore)
+        if(shotManager.shotRemain == 0 || timeRemain <= 0f || playerScore >= winScore)
             return true;
         return false;
     }
@@ -230,6 +242,16 @@ public class MyGdxGame extends Game {
         return timeRemain -= Gdx.graphics.getDeltaTime();
     }
 
+    /**
+     * Get the time used to finish the game
+     * @return
+     */
+    private int getTimeUsed() {
+        if(timeRemain <= 0){
+            return timeStart;
+        }
+        return timeStart - (int)timeRemain;
+    }
 
     /**
      * sets up the targets
@@ -243,17 +265,21 @@ public class MyGdxGame extends Game {
         String[] targetVirus = {"adware.png", "spyware.png" };
         for(int i = 0; i < targetGoodNames.length; i++) {
             Texture targetTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetGoodNames[i]));
-            target = new Target(targetTexture, random.nextInt(80)+50, 25);
+            String tempName = targetGoodNames[i].replace(".png", "");
+            System.out.println(tempName);
+            target = new Target(targetTexture, random.nextInt(80)+50, 25, tempName);
             goodTargets.add(target);
         }
-        for(int a = 0; a < targetBadNames.length; a++) {
-            Texture adwareTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetBadNames[a]));
-            target = new Target(adwareTexture, random.nextInt(120)+80, -10);
+        for(int i = 0; i < targetBadNames.length; i++) {
+            Texture adwareTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetBadNames[i]));
+            String tempName = targetBadNames[i].replace(".png", "");
+            target = new Target(adwareTexture, random.nextInt(120)+80, -10, tempName);
             badTargets.add(target);
         }
         for(int i = 0; i < targetVirus.length; i++) {
             Texture targetTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetVirus[i]));
-            target = new Target(targetTexture, random.nextInt(250)+150, 50);
+            String tempName = targetVirus[i].replace(".png", "");
+            target = new Target(targetTexture, random.nextInt(250)+150, 50, tempName);
             virusTargets.add(target);
         }
     }
