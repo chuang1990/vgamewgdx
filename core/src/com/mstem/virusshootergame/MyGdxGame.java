@@ -12,26 +12,41 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * MainClass, creates, render
  */
 public class MyGdxGame extends Game {
+    //utilities
     public static final int VIEWPORT_WIDTH = 1000;
     public static final int VIEWPORT_HEIGHT = 558;
     SpriteBatch batch;
     private OrthographicCamera camera;
-	Texture background, gunTexture;
+
+    //variables for checking game conditions
+    private float timeRemain = 120f;
+    public int winScore = 200;
+    public int playerScore = 0;
+
+    //general
+    Texture background, gunTexture;
     private Sprite gunSprite;
     private AnimatedSprite gunAnimated;
     private ShotManager shotManager;
-    private Target target;
+    //collision detection for each type of target
     private CollisionDetect collisionDetectGood;
     private CollisionDetect collisionDetectBad;
+    private CollisionDetect collisionDetectVirus;
+    //list of targets
     private ArrayList<Target> goodTargets = new ArrayList<Target>();
     private ArrayList<Target> badTargets = new ArrayList<Target>();
-    private String[] targetGoodNames = {"ad.png"} ;
-    private String[] targetBadNames = {"adware.png", "spyware.png"};
+    private ArrayList<Target> virusTargets = new ArrayList<Target>();
+    private Random random = new Random();
+
+    public MyGdxGame() {
+        this.create();
+    }
 
     /**
      * create
@@ -49,6 +64,8 @@ public class MyGdxGame extends Game {
         //background texture
 		background = new Texture(Gdx.files.internal("android/assets/background_mosaic.jpg"));
 
+        Random random = new Random();
+
         //gun sprite and initial position
         gunTexture = new Texture(Gdx.files.internal("android/assets/data/gun1.png"));
         gunSprite = new Sprite(gunTexture);
@@ -60,20 +77,12 @@ public class MyGdxGame extends Game {
         shotManager = new ShotManager(shotTexture);
 
         //Target setup
-        for(int i = 0; i < targetGoodNames.length; i++) {
-            Texture targetTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetGoodNames[i]));
-            target = new Target(targetTexture);
-            goodTargets.add(target);
-        }
-        for(int a = 0; a < targetBadNames.length; a++) {
-            Texture adwareTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetBadNames[a]));
-            target = new Target(adwareTexture);
-            badTargets.add(target);
-        }
+        setupTargets();
 
-        //Collision Detection
+        //Collision Detection for all targets
         collisionDetectGood = new CollisionDetect(gunAnimated,goodTargets,shotManager);
         collisionDetectBad = new CollisionDetect(gunAnimated, badTargets, shotManager);
+        collisionDetectVirus = new CollisionDetect(gunAnimated, virusTargets, shotManager);
 
 	}
 
@@ -88,31 +97,43 @@ public class MyGdxGame extends Game {
 	@Override
 	public void render () {
 //        //initialize window
-		Gdx.gl.glClearColor(1, 0, 0, 1);
+        //clear screen
+		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         //drawing objects to the screen
         batch.setProjectionMatrix(camera.combined);
 		batch.begin();
-		batch.draw(background, 0, 0);
-        gunAnimated.draw(batch);
-        for(Target good: goodTargets){
-            good.draw(batch);
-        }
-        for(Target bad: badTargets) {
-            bad.draw(batch);
-        }
-        shotManager.draw(batch);
-		batch.end();
+        batch.draw(background, 0, 0);
 
-        //check user input
-        handleInput();
-        //actions in response to inputs
-        update();
+        //check if game is over
+        if(!isGameOver()) {
+            //can't seem to move to a method
+            gunAnimated.draw(batch);
+            if(timeRemain >40f){
+            for (Target good : goodTargets) {
+                good.draw(batch);
+            }}
+            for (Target bad : badTargets) {
+                bad.draw(batch);
+            }
+            if (timeRemain <= 60f) {
+                for (Target virus : virusTargets) {
+                    virus.draw(batch);
+                }
+            }
+            shotManager.draw(batch);
 
-        //check collision
-        collisionDetectGood.hasCollide();
-        collisionDetectBad.hasCollide();
+            //check user input
+            handleInput();
+            //actions in response to inputs
+            update();
+
+            //check if the game is finished
+            isGameOver();
+        }
+
+        batch.end();
 	}
 
     /**
@@ -126,9 +147,20 @@ public class MyGdxGame extends Game {
         for(Target bad: badTargets) {
             bad.update();
         }
-//        target.update();
+        for(Target virus: virusTargets) {
+            virus.update();
+        }
         shotManager.update();
 
+        //check collision
+        collisionDetectGood.hasCollide();
+        collisionDetectBad.hasCollide();
+        collisionDetectVirus.hasCollide();
+
+        addPlayerScore();
+
+        //count down timer
+        countDown();
     }
 
     /**
@@ -137,9 +169,9 @@ public class MyGdxGame extends Game {
     private void handleInput() {
         //if left or a is pressed
         if (gunSprite.getX() > 0) {
-            if (Gdx.input.isKeyPressed(Input.Keys.LEFT) ||
-                    Gdx.input.isKeyPressed(Input.Keys.A)) {
-                if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT) ||
+                    Gdx.input.isKeyJustPressed(Input.Keys.A)) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)) {
                     gunAnimated.moveLeft(500);
                 }
                 else {
@@ -149,9 +181,9 @@ public class MyGdxGame extends Game {
         }
         //if right or d is pressed
         if(gunSprite.getX() < background.getWidth() - gunSprite.getWidth()){
-            if (Gdx.input.isKeyPressed(Input.Keys.RIGHT) ||
-                    Gdx.input.isKeyPressed(Input.Keys.D)) {
-                if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT) ||
+                    Gdx.input.isKeyJustPressed(Input.Keys.D)) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)) {
                     gunAnimated.moveRight(500);
                 }
                 else {
@@ -160,11 +192,66 @@ public class MyGdxGame extends Game {
             }
         }
         //if up or space or w is pressed
-        if(Gdx.input.isKeyPressed(Input.Keys.SPACE) ||
-                Gdx.input.isKeyPressed(Input.Keys.UP) ||
-                Gdx.input.isKeyPressed(Input.Keys.W)) {
+        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE) ||
+                Gdx.input.isKeyJustPressed(Input.Keys.UP) ||
+                Gdx.input.isKeyJustPressed(Input.Keys.W)) {
             shotManager.fire(gunAnimated.getX());
         }
+    }
+
+    /**
+     * Check if the any of the game over condition are meet
+     * @return
+     */
+    private boolean isGameOver() {
+        if(shotManager.shotRemain == 0)
+            return true;
+        else if(timeRemain == 0)
+            return true;
+        else if(playerScore == winScore)
+            return true;
+        return false;
+    }
+
+    /**
+     * count down timer
+     * @return
+     */
+    private float countDown() {
+        return timeRemain -= Gdx.graphics.getDeltaTime();
+    }
+
+    /**
+     * sets up the targets
+     */
+    public void setupTargets() {
+        Target target;
+        //for reading files for each target
+        String[] targetGoodNames = {"update.png", "changepassword.png", "intallanti.png","runscan.png"} ;
+        String[] targetBadNames = {"attachment.png", "ad.png", "unknownsender.png", "freeitem.png"
+                ,"facebookapp.png"};
+        String[] targetVirus = {"adware.png", "spyware.png" };
+        for(int i = 0; i < targetGoodNames.length; i++) {
+            Texture targetTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetGoodNames[i]));
+            target = new Target(targetTexture, random.nextInt(80)+50, 25);
+            goodTargets.add(target);
+        }
+        for(int a = 0; a < targetBadNames.length; a++) {
+            Texture adwareTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetBadNames[a]));
+            target = new Target(adwareTexture, random.nextInt(120)+80, -10);
+            badTargets.add(target);
+        }
+        for(int i = 0; i < targetVirus.length; i++) {
+            Texture targetTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetVirus[i]));
+            target = new Target(targetTexture, random.nextInt(250)+150, 50);
+            virusTargets.add(target);
+        }
+    }
+
+    public void addPlayerScore() {
+        playerScore = collisionDetectBad.getNumberOfHits() * -10 +
+                collisionDetectGood.getNumberOfHits()*25 +
+                collisionDetectVirus.getNumberOfHits()*50;
     }
 
     @Override

@@ -16,6 +16,7 @@ public class CollisionDetect {
     private AnimatedSprite gun;
     private List<Target> target = new ArrayList<Target>();
     private final ShotManager shotManager;
+    private int collide;
 
     /**
      * Constructor
@@ -36,7 +37,13 @@ public class CollisionDetect {
         for(Target t: target) {
             if (shotManager.bulletHits(t.getBoundingBox())) {
                 t.hit();
+                collide++;
             }
         }
     }
+
+    public int getNumberOfHits() {
+        return collide;
+    }
+
 }//End of CollisionDetect

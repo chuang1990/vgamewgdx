@@ -25,7 +25,6 @@ public class AnimatedSprite {
     private Vector2 velocity = new Vector2();
 
     private float stateTime;
-    private boolean isHit = false;
 
     /**
      * Constructor
@@ -122,22 +121,6 @@ public class AnimatedSprite {
     }
 
     /**
-     * Get the width of the sprite as int
-     * @return
-     */
-    public int getWidth() {
-        return (int) getSpriteWidth();
-    }
-
-    /**
-     * Get the height of the sprite
-     * @return
-     */
-    public int getHeight() {
-        return (int) sprite.getHeight() / FRAMES_ROW;
-    }
-
-    /**
      * Check the movement of the sprite, so it doesn't move so far
      */
     public void move() {
@@ -163,32 +146,11 @@ public class AnimatedSprite {
     }
 
     /**
-     * Change the direction of the movement of the sprite
-     */
-    public void changeDirection() {
-        //set the x-
-        velocity.x = -velocity.x;
-    }
-
-    /**
      * Get the bounding box of the sprite
      */
     public Rectangle getBoundingBox() {
         return new Rectangle(sprite.getX(),sprite.getY(),sprite.getWidth(),sprite.getHeight());
     }
 
-    /**
-     * When the sprite is hit, set the isHit to true
-     */
-    public void setDestroy(boolean ishit) {
-        this.isHit = ishit;
-    }
-
-    /**
-     * check if the sprite is hit
-     */
-    public boolean isHit() {
-        return isHit;
-    }
 
 }//End of AnimatedSprite.java
