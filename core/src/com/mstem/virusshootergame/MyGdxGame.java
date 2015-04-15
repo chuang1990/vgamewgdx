@@ -7,6 +7,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -25,9 +26,10 @@ public class MyGdxGame extends Game {
     private OrthographicCamera camera;
 
     //variables for checking game conditions
-    private float timeRemain = 120f;
+    private float timeRemain = 80f;
     public int winScore = 200;
     public int playerScore = 0;
+    private BitmapFont font;
 
     //general
     Texture background, gunTexture;
@@ -64,7 +66,9 @@ public class MyGdxGame extends Game {
         //background texture
 		background = new Texture(Gdx.files.internal("android/assets/background_mosaic.jpg"));
 
-        Random random = new Random();
+        //font
+        font = new BitmapFont();
+        font.setColor(1,0,0,1);
 
         //gun sprite and initial position
         gunTexture = new Texture(Gdx.files.internal("android/assets/data/gun1.png"));
@@ -117,7 +121,7 @@ public class MyGdxGame extends Game {
             for (Target bad : badTargets) {
                 bad.draw(batch);
             }
-            if (timeRemain <= 60f) {
+            if (timeRemain <= 80f) {
                 for (Target virus : virusTargets) {
                     virus.draw(batch);
                 }
@@ -131,8 +135,13 @@ public class MyGdxGame extends Game {
 
             //check if the game is finished
             isGameOver();
+
         }
 
+        //font
+        font.draw(batch, "Score: " + Integer.toString(playerScore), 10,20);
+        font.draw(batch, "Bullets Remain: " + shotManager.shotRemain, VIEWPORT_WIDTH-130, 20);
+        font.draw(batch, "Time Remain: " + Integer.toString((int)timeRemain) + "seconds", 120, 20);
         batch.end();
 	}
 
@@ -204,11 +213,7 @@ public class MyGdxGame extends Game {
      * @return
      */
     private boolean isGameOver() {
-        if(shotManager.shotRemain == 0)
-            return true;
-        else if(timeRemain == 0)
-            return true;
-        else if(playerScore == winScore)
+        if(shotManager.shotRemain == 0 || timeRemain == 0f || playerScore >= winScore)
             return true;
         return false;
     }
@@ -218,8 +223,13 @@ public class MyGdxGame extends Game {
      * @return
      */
     private float countDown() {
+        if(isGameOver()) {
+            return timeRemain += 0;
+        }
+
         return timeRemain -= Gdx.graphics.getDeltaTime();
     }
+
 
     /**
      * sets up the targets
