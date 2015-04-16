@@ -128,8 +128,8 @@ public class Target {
      */
     public void hit() {
         targetAnimated.setDestroy(true);
-        respawnTime = 8f;
-//        respawnTime = 5f;
+//        respawnTime = 8f;
+        respawnTime = 6f;
     }
 
     /**

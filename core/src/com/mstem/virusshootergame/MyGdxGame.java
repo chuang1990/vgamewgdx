@@ -11,10 +11,9 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
-import com.badlogic.gdx.scenes.scene2d.ui.Window;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -56,16 +55,19 @@ public class MyGdxGame extends Game {
     private int timeStart = 80;
 
     //window and message
-    private Window window;
+    private ShapeRenderer window;
     private TargetMessage messenger;
+    private BitmapFont message;
+    private float messageShowtime = 10f;
+    private String targetName = "";
+
+    private float timeZero = 0f;
 
     /**
      * Constructor
      */
     public MyGdxGame() {
         this.create();
-
-
     }
 
     /**
@@ -99,15 +101,6 @@ public class MyGdxGame extends Game {
         Texture shotTexture = new Texture(Gdx.files.internal("android/assets/data/bullet.png"));
         shotManager = new ShotManager(shotTexture);
 
-//        stage = new Stage();
-        atlas = new TextureAtlas(Gdx.files.internal("android/assets/ui_skin/uiskin.atlas"));
-        skin = new Skin(Gdx.files.internal("android/assets/ui_skin/uiskin.json"),atlas);
-        //add window
-        window = new Window("Message", skin);
-//
-        window.padTop(20);
-        window.pack();
-
         //Target setup
         setupTargets();
 
@@ -117,6 +110,10 @@ public class MyGdxGame extends Game {
         collisionDetectVirus = new CollisionDetect(gunAnimated, virusTargets, shotManager);
 
         //messages
+        window = new ShapeRenderer();
+        window.setColor(0,0,0,.5f);
+        message = new BitmapFont();
+        message.setColor(1,1,1,1);
         messenger = new TargetMessage();
 
 	}
@@ -140,15 +137,40 @@ public class MyGdxGame extends Game {
         sb.setProjectionMatrix(camera.combined);
 		sb.begin();
         sb.draw(background, 0, 0);
-//        stage.draw();
-//        window.draw(sb,1);
-
-        drawObjects();
+        if(!checkDrawMessage()) {
+            drawObjects();
+        }
+        else {
+            drawMessage();
+        }
 
         //font
 
         sb.end();
 	}
+
+    private void drawMessage() {
+            if(checkDrawMessage()){
+                String temp = messenger.randomPick(targetName,collisionDetectVirus);
+//                System.out.println(temp);
+                message.draw(sb, temp, VIEWPORT_WIDTH / 6, VIEWPORT_HEIGHT / 2);
+            }
+            else{
+                targetName = "";
+            }
+
+    }
+
+    private boolean checkDrawMessage() {
+        for(Target virus: virusTargets) {
+            if(virus.checkDestroy()){
+                targetName = virus.getName();
+
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * update
@@ -217,7 +239,6 @@ public class MyGdxGame extends Game {
             font.draw(sb, "Total Score: " + playerScore, VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2+50);
             font.draw(sb,"Time Used: " + getTimeUsed(), VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2+30);
             font.draw(sb, "Remaining Bullet: " + shotManager.shotRemain, VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2+10);
-            font.draw(sb,"Press R to Start a New Game Press Q: Return to Main Menu", VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2 -10);
         }
     }
 
@@ -271,6 +292,9 @@ public class MyGdxGame extends Game {
         if(isGameOver()) {
             return timeRemain += 0;
         }
+        if(checkDrawMessage()){
+            return timeRemain += 0;
+        }
 
         return timeRemain -= Gdx.graphics.getDeltaTime();
     }
@@ -312,6 +336,7 @@ public class MyGdxGame extends Game {
             Texture targetTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetVirus[i]));
             String tempName = targetVirus[i].replace(".png", "");
             target = new Target(targetTexture, random.nextInt(150)+80, 50, tempName);
+            System.out.println(tempName);
             virusTargets.add(target);
         }
     }

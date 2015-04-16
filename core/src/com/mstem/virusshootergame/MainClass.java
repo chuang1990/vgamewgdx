@@ -18,8 +18,7 @@ public class MainClass extends Game {
 
 
         //Assets.load();
-        setScreen(new GameScreen(new Stage(),this));
-
+        setScreen(new GameScreen(new Stage(), this));
     }
 
     public void render() {
