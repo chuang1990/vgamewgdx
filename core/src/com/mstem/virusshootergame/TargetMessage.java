@@ -19,18 +19,25 @@ public class TargetMessage {
                             "Spyware uses computer's memory and resources to perform task, which can lead to system crashes."};
     String[] adMessageT = {"Randomly click on website advertisement may lead you to harmful site that steal your web surfing information",
                             "Clicking on ads was 182 times more likely to install a virus on a user's computer than surfing the Internet for porn.",
-                            ""};
+                            "Advertisers often use technology, such as web bugs and re-spawning cookies, to maximizing their abilities to track consumers."};
+    String[] passwordMessageT = {"There are a number of common techniques used to crack passwords made up of simple and widely used passwords.",
+                                "Don’t tell anyone your password.",
+                                "Do use at least eight characters of lowercase and uppercase letters, numbers, and symbols in your password.\n Remember, the more the merrier."};
+
     ArrayList<String> adwareMessage = new ArrayList<String>();
     ArrayList<String> spywareMessage = new ArrayList<String>();
-
+    ArrayList<String> adMessage = new ArrayList<String>();
+    ArrayList<String> passwordMessage = new ArrayList<String>();
 
     private String message = "";
 
     public TargetMessage() {
-        for (int a = 0; a < 3; a ++) {
+        for (int a = 0; a < 5; a ++) {
             for (int i = 0; i < adwareMessageT.length; i++) {
                 adwareMessage.add(adwareMessageT[i]);
                 spywareMessage.add(spywareMessageT[i]);
+                adMessage.add(adMessageT[i]);
+                passwordMessage.add(passwordMessageT[i]);
             }
         }
     }
@@ -42,6 +49,11 @@ public class TargetMessage {
 
     }
 
+    /**
+     * Return different message according to the hit type
+     * @param name
+     * @param cd
+     */
     private void chooseFrom(String name, CollisionDetect cd) {
         message ="";
         if(name == "adware" || name.equals("adware")) {
@@ -50,12 +62,19 @@ public class TargetMessage {
         }
         else if(name == "spyware" || name.equals("spyware")){
             int i = cd.getNumberOfHits()-1;
-            message += spywareMessage.get(i);
+            message = spywareMessage.get(i);
         }
-//        else if(name == "runscan" || name.equals("runscan")){
-//            int i = cd.getNumberOfHits()-1;
-//            message =
-//        }
+        else if(name == "changepassword" || name.equals("changepassword")) {
+            int i = cd.getNumberOfHits()-1;
+            message = passwordMessage.get(i);
+        }
+        else if(name == "ad" || name.equals("ad")){
+            int i = cd.getNumberOfHits()-1;
+            message = adMessage.get(i);
+        }
+        else {
+            message = "not yet implemented";
+        }
     }
 
 //    public static void main(String[] args) {

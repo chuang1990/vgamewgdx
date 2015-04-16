@@ -55,11 +55,11 @@ public class MyGdxGame extends Game {
     private int timeStart = 80;
 
     //window and message
-    private ShapeRenderer window;
     private TargetMessage messenger;
     private BitmapFont message;
     private float messageShowtime = 10f;
     private String targetName = "";
+    private CollisionDetect currentCollide;
 
     private float timeZero = 0f;
 
@@ -110,8 +110,6 @@ public class MyGdxGame extends Game {
         collisionDetectVirus = new CollisionDetect(gunAnimated, virusTargets, shotManager);
 
         //messages
-        window = new ShapeRenderer();
-        window.setColor(0,0,0,.5f);
         message = new BitmapFont();
         message.setColor(1,1,1,1);
         messenger = new TargetMessage();
@@ -151,12 +149,12 @@ public class MyGdxGame extends Game {
 
     private void drawMessage() {
             if(checkDrawMessage()){
-                String temp = messenger.randomPick(targetName,collisionDetectVirus);
+                String temp = messenger.randomPick(targetName,currentCollide);
 //                System.out.println(temp);
                 message.draw(sb, temp, VIEWPORT_WIDTH / 6, VIEWPORT_HEIGHT / 2);
             }
             else{
-                targetName = "";
+                targetName = "not yet implemented";
             }
 
     }
@@ -165,7 +163,21 @@ public class MyGdxGame extends Game {
         for(Target virus: virusTargets) {
             if(virus.checkDestroy()){
                 targetName = virus.getName();
-
+                currentCollide = collisionDetectVirus;
+                return true;
+            }
+        }
+        for(Target good: goodTargets) {
+            if(good.checkDestroy()){
+                targetName = good.getName();
+                currentCollide = collisionDetectGood;
+                return true;
+            }
+        }
+        for(Target bad: badTargets) {
+            if(bad.checkDestroy()) {
+                targetName = bad.getName();
+                currentCollide = collisionDetectBad;
                 return true;
             }
         }
@@ -200,7 +212,7 @@ public class MyGdxGame extends Game {
     }
 
     /**
-     * draw the moving objects
+     * draw the moving objects, goes in render
      */
     private void drawObjects() {
         //check if game is over
