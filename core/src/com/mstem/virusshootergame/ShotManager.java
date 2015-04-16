@@ -21,7 +21,7 @@ public class ShotManager {
     private static final int SHOT_Y_OFFSET = 35;
     private static final float MINIMUM_TIME_BETWEEN_SHOTS = 1f;
 
-    int shotRemain = 50;
+    int shotRemain = 30;
 
     private final Texture shotTexture;
     private List<AnimatedSprite> shots = new ArrayList<AnimatedSprite>();

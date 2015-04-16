@@ -128,7 +128,7 @@ public class Target {
      */
     public void hit() {
         targetAnimated.setDestroy(true);
-        respawnTime = .1f;
+        respawnTime = 8f;
 //        respawnTime = 5f;
     }
 
@@ -144,6 +144,13 @@ public class Target {
      */
     public String getName() {
         return this.name;
+    }
+
+    /**
+     * check if hit
+     */
+    public boolean checkDestroy() {
+        return targetAnimated.isHit();
     }
 
 

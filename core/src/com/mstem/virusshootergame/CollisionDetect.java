@@ -17,6 +17,7 @@ public class CollisionDetect {
     private List<Target> target = new ArrayList<Target>();
     private final ShotManager shotManager;
     private int collide;
+    private ArrayList<Integer> collideCount = new ArrayList<Integer>();
 
     /**
      * Constructor
@@ -45,5 +46,6 @@ public class CollisionDetect {
     public int getNumberOfHits() {
         return collide;
     }
+
 
 }//End of CollisionDetect

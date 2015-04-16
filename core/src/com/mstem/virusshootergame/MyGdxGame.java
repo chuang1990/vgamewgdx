@@ -1,6 +1,6 @@
 package com.mstem.virusshootergame;
 
-//import com.badlogic.gdx.ApplicationAdapter;
+
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -10,10 +10,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.mstem.virusshootergame.EndGameScreen;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 /**
@@ -24,17 +27,20 @@ public class MyGdxGame extends Game {
     public static final String TAG = MyGdxGame.class.getName();
     public static final int VIEWPORT_WIDTH = 1000;
     public static final int VIEWPORT_HEIGHT = 558;
-    SpriteBatch batch;
+    SpriteBatch sb;
     private OrthographicCamera camera;
+//    private Stage stage;
+    private Skin skin;
+    private TextureAtlas atlas;
 
     //variables for checking game conditions
-    private float timeRemain = 60f;
+    private float timeRemain = 90f;
     public int winScore = 300;
     public int playerScore = 0;
     private BitmapFont font;
 
     //general
-    Texture background, gunTexture;
+    Texture background, gunTexture, gameoverTexture;
     private Sprite gunSprite;
     private AnimatedSprite gunAnimated;
     private ShotManager shotManager;
@@ -49,8 +55,17 @@ public class MyGdxGame extends Game {
     private Random random = new Random();
     private int timeStart = 80;
 
+    //window and message
+    private Window window;
+    private TargetMessage messenger;
+
+    /**
+     * Constructor
+     */
     public MyGdxGame() {
         this.create();
+
+
     }
 
     /**
@@ -64,10 +79,11 @@ public class MyGdxGame extends Game {
         camera.setToOrtho(false, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
         //for drawing texture and sprites on the screen
-		batch = new SpriteBatch();
+		sb = new SpriteBatch();
 
         //background texture
-		background = new Texture(Gdx.files.internal("android/assets/background/background_mosaic.jpg"));
+		background = new Texture(Gdx.files.internal("android/assets/data/background_mosaic.jpg"));
+        gameoverTexture = new Texture(Gdx.files.internal("android/assets/data/GameOver.png"));
 
         //font
         font = new BitmapFont();
@@ -83,6 +99,15 @@ public class MyGdxGame extends Game {
         Texture shotTexture = new Texture(Gdx.files.internal("android/assets/data/bullet.png"));
         shotManager = new ShotManager(shotTexture);
 
+//        stage = new Stage();
+        atlas = new TextureAtlas(Gdx.files.internal("android/assets/ui_skin/uiskin.atlas"));
+        skin = new Skin(Gdx.files.internal("android/assets/ui_skin/uiskin.json"),atlas);
+        //add window
+        window = new Window("Message", skin);
+//
+        window.padTop(20);
+        window.pack();
+
         //Target setup
         setupTargets();
 
@@ -91,11 +116,14 @@ public class MyGdxGame extends Game {
         collisionDetectBad = new CollisionDetect(gunAnimated, badTargets, shotManager);
         collisionDetectVirus = new CollisionDetect(gunAnimated, virusTargets, shotManager);
 
+        //messages
+        messenger = new TargetMessage();
+
 	}
 
     @Override
     public void dispose() {
-        batch.dispose();
+        sb.dispose();
     }
 
     /**
@@ -109,15 +137,17 @@ public class MyGdxGame extends Game {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         //drawing objects to the screen
-        batch.setProjectionMatrix(camera.combined);
-		batch.begin();
-        batch.draw(background, 0, 0);
+        sb.setProjectionMatrix(camera.combined);
+		sb.begin();
+        sb.draw(background, 0, 0);
+//        stage.draw();
+//        window.draw(sb,1);
 
         drawObjects();
 
         //font
 
-        batch.end();
+        sb.end();
 	}
 
     /**
@@ -147,24 +177,27 @@ public class MyGdxGame extends Game {
         countDown();
     }
 
+    /**
+     * draw the moving objects
+     */
     private void drawObjects() {
         //check if game is over
         if(!isGameOver()) {
             //can't seem to move to a method
-            gunAnimated.draw(batch);
+            gunAnimated.draw(sb);
                 for (Target good : goodTargets) {
-                    good.draw(batch);
+                    good.draw(sb);
                 }
 
                 for (Target bad : badTargets) {
-                    bad.draw(batch);
-                }
-            
-                for (Target virus : virusTargets) {
-                    virus.draw(batch);
+                    bad.draw(sb);
                 }
 
-            shotManager.draw(batch);
+                for (Target virus : virusTargets) {
+                    virus.draw(sb);
+                }
+
+            shotManager.draw(sb);
 
             //check user input
             handleInput();
@@ -174,17 +207,17 @@ public class MyGdxGame extends Game {
             //check if the game is finished
             isGameOver();
 
-            font.draw(batch, "Score: " + Integer.toString(playerScore), 10,20);
-            font.draw(batch, "Bullets Remain: " + shotManager.shotRemain, VIEWPORT_WIDTH-130, 20);
-            font.draw(batch, "Time Remain: " + Integer.toString((int)timeRemain) + "seconds", 120, 20);
+            font.draw(sb, "Score: " + Integer.toString(playerScore), 10,20);
+            font.draw(sb, "Bullets Remain: " + shotManager.shotRemain, VIEWPORT_WIDTH-130, 20);
+            font.draw(sb, "Time Remain: " + Integer.toString((int)timeRemain) + "seconds", 120, 20);
 
         }
         else {
-
-            font.draw(batch, "Total Score: " + playerScore, VIEWPORT_WIDTH/2 -100, VIEWPORT_HEIGHT/2+50);
-            font.draw(batch,"Time Used: " + getTimeUsed(), VIEWPORT_WIDTH/2-100, VIEWPORT_HEIGHT/2+30);
-            font.draw(batch, "Remaining Bullet: " + shotManager.shotRemain, VIEWPORT_WIDTH/2 -100, VIEWPORT_HEIGHT/2+10);
-            font.draw(batch,"Press R to Start a New Game Press Q: Return to Main Menu", VIEWPORT_WIDTH/2 -100, VIEWPORT_HEIGHT/2 -10);
+            sb.draw(gameoverTexture,VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2+80);
+            font.draw(sb, "Total Score: " + playerScore, VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2+50);
+            font.draw(sb,"Time Used: " + getTimeUsed(), VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2+30);
+            font.draw(sb, "Remaining Bullet: " + shotManager.shotRemain, VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2+10);
+            font.draw(sb,"Press R to Start a New Game Press Q: Return to Main Menu", VIEWPORT_WIDTH/3, VIEWPORT_HEIGHT/2 -10);
         }
     }
 
@@ -266,20 +299,19 @@ public class MyGdxGame extends Game {
         for(int i = 0; i < targetGoodNames.length; i++) {
             Texture targetTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetGoodNames[i]));
             String tempName = targetGoodNames[i].replace(".png", "");
-            System.out.println(tempName);
-            target = new Target(targetTexture, random.nextInt(80)+50, 25, tempName);
+            target = new Target(targetTexture, random.nextInt(50)+20, 25, tempName);
             goodTargets.add(target);
         }
         for(int i = 0; i < targetBadNames.length; i++) {
             Texture adwareTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetBadNames[i]));
             String tempName = targetBadNames[i].replace(".png", "");
-            target = new Target(adwareTexture, random.nextInt(120)+80, -10, tempName);
+            target = new Target(adwareTexture, random.nextInt(80)+40, -10, tempName);
             badTargets.add(target);
         }
         for(int i = 0; i < targetVirus.length; i++) {
             Texture targetTexture = new Texture(Gdx.files.internal("android/assets/data/" + targetVirus[i]));
             String tempName = targetVirus[i].replace(".png", "");
-            target = new Target(targetTexture, random.nextInt(250)+150, 50, tempName);
+            target = new Target(targetTexture, random.nextInt(150)+80, 50, tempName);
             virusTargets.add(target);
         }
     }
